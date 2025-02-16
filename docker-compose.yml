@@ -1,0 +1,108 @@
+version: "3.8"
+
+services:
+  # USER SERVICE & DATABASE
+  user-db:
+    image: postgres:latest
+    container_name: user-service-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: user_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    restart: always
+    depends_on:
+      - user-db
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://user:password@user-db:5432/user_db
+
+  # EVENT SERVICE & DATABASE
+  event-db:
+    image: mongo:latest
+    container_name: event-service-db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: adminpassword
+      MONGO_INITDB_DATABASE: event_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - event_db_data:/data/db
+
+  event-service:
+    build: ./event-service
+    container_name: event-service
+    restart: always
+    depends_on:
+      - event-db
+    ports:
+      - "8001:8001"
+    environment:
+      MONGO_URI: mongodb://admin:adminpassword@event-service-db:27017
+
+  # BOOKING SERVICE & DATABASE
+  booking-db:
+    image: postgres:latest
+    container_name: booking-service-db
+    restart: always
+    environment:
+      POSTGRES_USER: booking
+      POSTGRES_PASSWORD: bookingpassword
+      POSTGRES_DB: booking_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking_db_data:/var/lib/postgresql/data
+
+  booking-service:
+    build: ./booking-service
+    container_name: booking-service
+    restart: always
+    depends_on:
+      - booking-db
+    ports:
+      - "8002:8002"
+    environment:
+      DATABASE_URL: postgresql://booking:bookingpassword@booking-db:5432/booking_db
+
+  # NOTIFICATION SERVICE & DATABASE
+  notification-db:
+    image: mongo:latest
+    container_name: notification-service-db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: notif_admin
+      MONGO_INITDB_ROOT_PASSWORD: notif_password
+      MONGO_INITDB_DATABASE: notification_db
+    ports:
+      - "27018:27017"
+    volumes:
+      - notification_db_data:/data/db
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    restart: always
+    depends_on:
+      - notification-db
+    ports:
+      - "8003:8003"
+    environment:
+      MONGO_URI: mongodb://notif_admin:notif_password@notification-db:27017
+
+volumes:
+  user_db_data:
+  event_db_data:
+  booking_db_data:
+  notification_db_data:
